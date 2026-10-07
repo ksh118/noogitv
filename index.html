@@ -1,1 +1,601 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>계좌후원 오버레이</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--tx:#37352f;--sub:#787774;--bd:#e9e9e7;--hv:rgba(55,53,47,.06);--sb:#f7f6f3;--ac:#2eaadc;--red:#eb5757;--ok:#4dab9a}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--tx);font:14px/1.5 'Noto Sans KR',-apple-system,'Segoe UI',sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+.top{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:8px;padding:10px 20px;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--bd)}
+.top .name{font-weight:700;margin-right:auto;white-space:nowrap}
+.modes{display:flex;background:var(--sb);border-radius:7px;padding:3px;gap:2px}
+.modes button{padding:4px 12px;border-radius:5px;font-size:13px;color:var(--sub);white-space:nowrap}
+.modes button.on{background:#fff;color:var(--tx);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.btn{padding:5px 11px;border-radius:6px;color:var(--sub);font-size:13px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{background:var(--hv);color:var(--tx)}
+.btn.pri{background:var(--ac);color:#fff;font-weight:500}.btn.pri:hover{background:#2699c7;color:#fff}
+.btn.line{border:1px solid var(--bd)}
+.dot{width:8px;height:8px;border-radius:50%;background:#bbb;flex-shrink:0}
+.dot.on{background:var(--ok)}.dot.error{background:var(--red)}.dot.connecting{background:#e0a030}
+.page{max-width:1040px;margin:0 auto;padding:40px 24px 90px}
+h1{font-size:32px;font-weight:900;margin:0 0 22px;letter-spacing:-.02em}
+h2{font-size:15px;font-weight:700;margin:0}
+.quick{display:flex;gap:8px}
+.quick input{flex:1;min-width:0;padding:11px 14px;border:1px solid var(--bd);border-radius:8px;background:var(--sb);font-size:15px;outline:none}
+.quick input:focus{border-color:var(--ac);box-shadow:0 0 0 2px rgba(46,170,220,.25);background:#fff}
+.quick .btn{padding:0 18px;font-size:14px}
+.hint{color:var(--sub);font-size:12.5px;margin:7px 0 32px;min-height:19px}
+.hint.err{color:var(--red)}
+.cols{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:48px;align-items:start}
+@media(max-width:860px){.cols{grid-template-columns:1fr}}
+.head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.tag{background:var(--hv);color:var(--sub);border-radius:4px;padding:0 7px;font-size:12px;font-weight:500}
+.grow{flex:1}
+table{width:100%;border-collapse:collapse}
+th{font-weight:500;color:var(--sub);font-size:12px;text-align:left;padding:7px 6px;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd)}
+td{padding:0;border-bottom:1px solid var(--bd);height:42px}
+td.rk{width:34px;color:var(--sub);text-align:center;font-size:12px}
+.cell{width:100%;height:36px;padding:0 8px;background:transparent;border:0;border-radius:5px;outline:none;font-weight:500}
+.cell:hover{background:var(--hv)}
+.cell:focus{background:#fff;box-shadow:inset 0 0 0 2px var(--ac)}
+.cell.num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+td.qa{width:156px;white-space:nowrap;text-align:right;padding-left:6px}
+td.qa button,td.dl button{opacity:0;padding:2px 7px;font-size:11.5px;border-radius:4px;background:var(--hv);color:var(--sub)}
+td.dl{width:34px;text-align:center}td.dl button{background:none;font-size:13px}
+tr:hover td.qa button,tr:hover td.dl button{opacity:1}
+td.qa button:hover{color:var(--tx)}td.dl button:hover{color:var(--red)}
+@media(hover:none){td.qa button,td.dl button{opacity:1}}
+.addrow{display:block;width:100%;text-align:left;padding:9px 8px;color:var(--sub);border-radius:5px;font-size:13px}
+.addrow:hover{background:var(--hv)}
+.empty td{padding:22px 6px;color:var(--sub);text-align:center;height:auto}
+.side{display:flex;flex-direction:column;gap:30px;position:sticky;top:70px}
+.prev{border-radius:10px;padding:24px 34px;display:flex;justify-content:center;border:1px dashed #d9d9d6;background:#fff}
+.prev.tp{background:conic-gradient(#eee 25%,#fff 0 50%,#eee 0 75%,#fff 0) 0 0/16px 16px}
+.link{font-size:12px;color:var(--sub);text-decoration:none;font-weight:400}.link:hover{color:var(--tx)}
+.prop{display:flex;align-items:center;min-height:38px;border-bottom:1px solid var(--bd)}
+.prop>label{width:88px;color:var(--sub);font-size:13px;flex-shrink:0;padding-left:2px}
+.prop .cell{height:32px}
+select.cell{cursor:pointer}
+.seg{display:flex;gap:4px;flex-wrap:wrap}
+.seg button{padding:3px 11px;border-radius:5px;font-size:13px;color:var(--sub)}
+.seg button.on{background:var(--hv);color:var(--tx);font-weight:700}
+.bank{display:flex;align-items:center;gap:4px;border-bottom:1px solid var(--bd);min-height:38px}
+.bank input[type=checkbox]{accent-color:var(--ac);width:16px;height:16px;margin:0 2px 0 4px;flex-shrink:0}
+.bank .x{opacity:0;color:var(--sub);padding:0 10px}.bank:hover .x{opacity:1}.bank .x:hover{color:var(--red)}
+.bank .cell{font-size:13px}
+.bank.off .cell{text-decoration:line-through;color:var(--sub)}
+.foot{margin-top:50px;font-size:12px}
+.foot button{color:var(--sub)}.foot button:hover{color:var(--red)}
+/* overlay card */
+.ov{width:100%;max-width:400px;border-radius:10px;padding:20px;font-weight:700;position:relative}
+.ov.white{background:#fff;color:#0f172a;border:1px solid #e2e8f0}
+.ov.black{background:#0f172a;color:#fff;border:1px solid #334155}
+.ov h3{margin:0 0 12px;text-align:center;font-size:19px;font-weight:900}
+.ov-row{display:flex;justify-content:space-between;gap:8px;font-size:16px;margin-bottom:6px;position:relative}
+.ov-row.dim{opacity:.35}
+.ov-none{text-align:center;opacity:.4;font-size:13px;padding:4px}
+.ov-goal{margin-top:14px;padding-top:12px;border-top:1px solid rgba(128,128,128,.35)}
+.ov-line{display:flex;justify-content:space-between;gap:8px;font-size:14px;margin-bottom:6px}
+.ov-line b{color:#d97706}.ov.black .ov-line b{color:#fbbf24}
+.bar{height:12px;border-radius:99px;background:rgba(128,128,128,.28);overflow:hidden}
+.bar i{display:block;height:100%;background:#f59e0b;transition:width .3s}
+.ov-bank{margin-top:10px;text-align:center;font-size:12px;font-weight:800}
+.ce{display:inline-block;min-width:2.2ch;border-radius:4px;outline:none;cursor:text;padding:0 2px;margin:0 -2px}
+.ce:empty::before{content:attr(data-ph);opacity:.35}
+.ce:hover{background:rgba(128,128,128,.16)}
+.ce:focus{background:rgba(46,170,220,.2);box-shadow:0 0 0 2px #2eaadc}
+.ov-x{position:absolute;right:-30px;top:0;opacity:0;color:#999;font-size:13px;padding:0 6px}
+.ov-row:hover .ov-x{opacity:1}.ov-x:hover{color:var(--red)}
+.edit-tools{display:none;gap:6px;justify-content:center;margin-top:12px}
+.edit-note{display:none;text-align:center;color:var(--sub);font-size:12.5px;margin-top:10px}
+body.mode-edit .edit-tools{display:flex}body.mode-edit .edit-note{display:block}
+body.mode-edit .cols{grid-template-columns:minmax(0,520px);justify-content:center;gap:34px}
+body.mode-edit #sec-table,body.mode-edit #bank-sec,body.mode-edit #open-ov{display:none}
+body.mode-edit .side{position:static}
+body.mode-edit .prev{padding:34px 44px}
+body.overlay .top,body.overlay .page{display:none}
+#overlay-root{display:none}
+body.overlay #overlay-root{display:flex;padding:16px}
+/* modal / toast */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal.show{display:flex}
+.box{background:#fff;border-radius:12px;padding:24px;width:100%;max-width:520px;max-height:90vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.box h2{font-size:18px;margin-bottom:6px}
+.box ol{padding-left:18px;margin:10px 0;color:var(--sub);font-size:13px}
+.box textarea{width:100%;height:150px;border:1px solid var(--bd);border-radius:6px;background:var(--sb);padding:8px;font:12px/1.5 ui-monospace,Consolas,monospace;resize:vertical;outline:none}
+.box textarea:focus{border-color:var(--ac)}
+.box pre{background:var(--sb);padding:8px;border-radius:6px;font-size:11px;overflow:auto;margin:6px 0}
+.box input.url{width:100%;padding:9px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--sb);font-size:13px;outline:none;margin:12px 0 8px}
+.status{padding:8px 10px;border-radius:6px;background:var(--sb);font-size:13px;margin:10px 0;display:flex;gap:8px;align-items:center}
+.warn{background:#fff4e5;color:#8a5200;border-radius:6px;padding:8px 10px;font-size:12.5px;margin-top:8px;display:none}
+.acts{display:flex;gap:6px;justify-content:flex-end;margin-top:14px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#37352f;color:#fff;padding:9px 14px;border-radius:8px;font-size:13px;display:none;gap:12px;align-items:center;z-index:60}
+#toast.show{display:flex}
+#toast button{color:#7cc7ec;font-weight:700}
+</style>
+</head>
+<body>
 
+<header class="top">
+  <span class="name">📋 계좌후원 오버레이</span>
+  <div class="modes"><button data-mode="manage">관리</button><button data-mode="edit">미리보기에서 편집</button></div>
+  <button class="btn" id="fb-pill"><span class="dot" id="fb-dot"></span><span id="fb-text">Firebase</span></button>
+  <button class="btn pri" id="copy-link">OBS 링크</button>
+</header>
+
+<main class="page">
+  <h1>🍚 후원 순위 관리</h1>
+
+  <div class="quick">
+    <input id="quick-input" placeholder="이름 금액 입력 후 Enter   예) 손정연 10402  /  허성윤 1.5만" autocomplete="off">
+    <button class="btn pri" id="quick-btn" type="button">추가</button>
+  </div>
+  <div class="hint" id="quick-hint">같은 이름이 있으면 금액이 자동으로 합쳐져요.</div>
+
+  <div class="cols">
+    <section id="sec-table">
+      <div class="head">
+        <h2>후원자</h2><span class="tag" id="count">0명</span>
+        <span class="grow"></span>
+        <span style="color:var(--sub);font-size:13px">합계 <b id="total" style="color:var(--tx)">0원</b></span>
+      </div>
+      <table>
+        <thead><tr><th></th><th>이름</th><th style="text-align:right;padding-right:10px">금액(원)</th><th></th><th></th></tr></thead>
+        <tbody id="tb"></tbody>
+      </table>
+      <button class="addrow" id="add-donor" type="button">+ 새 후원자</button>
+      <div class="hint" style="margin:8px 0 0">칸을 클릭하면 바로 수정돼요. 금액에 <b>1.5만</b>처럼 써도 돼요.</div>
+    </section>
+
+    <aside class="side">
+      <div>
+        <div class="head"><h2>미리보기</h2><span class="grow"></span><a class="link" id="open-ov" target="_blank">새 창으로 열기</a></div>
+        <div class="prev" id="preview"></div>
+        <div class="edit-tools">
+          <button class="btn line" id="ev-add-donor" type="button">+ 후원자 추가</button>
+          <button class="btn line" id="ev-add-bank" type="button">+ 계좌 추가</button>
+        </div>
+        <div class="edit-note">카드 안의 글자를 클릭해서 바로 고치세요. 줄에 마우스를 올리면 ✕로 삭제할 수 있어요.</div>
+      </div>
+
+      <div>
+        <div class="head"><h2>설정</h2></div>
+        <div class="prop"><label>제목</label><input class="cell" id="s-otitle" placeholder="★계좌후원순위★"></div>
+        <div class="prop"><label>문구</label><input class="cell" id="s-title" placeholder="예) 배고파.."></div>
+        <div class="prop"><label>목표 금액</label><input class="cell" id="s-goal"></div>
+        <div class="prop"><label>표시 인원</label>
+          <select class="cell" id="s-ranks">
+            <option value="3">TOP 3</option><option value="4">TOP 4</option><option value="5">TOP 5</option><option value="10">TOP 10</option><option value="0">전체</option>
+          </select></div>
+        <div class="prop"><label>카드 색</label>
+          <div class="seg" data-k="theme"><button data-v="white">☀️ 흰색</button><button data-v="black">🌙 검정</button></div></div>
+        <div class="prop"><label>바깥 배경</label>
+          <div class="seg" data-k="bg"><button data-v="white">흰색</button><button data-v="transparent">투명</button></div></div>
+      </div>
+
+      <div id="bank-sec">
+        <div class="head"><h2>계좌</h2><span class="tag">체크한 계좌만 표시</span></div>
+        <div id="banks"></div>
+        <button class="addrow" id="add-bank" type="button">+ 계좌 추가</button>
+      </div>
+    </aside>
+  </div>
+
+  <div class="foot"><button id="reset" type="button">모든 데이터 초기화</button></div>
+</main>
+
+<div id="overlay-root"></div>
+
+<div class="modal" id="link-modal">
+  <div class="box">
+    <h2>OBS 링크</h2>
+    <div style="color:var(--sub);font-size:13px">OBS → 소스 추가 → <b>브라우저</b> → URL에 붙여넣기 (너비 440 / 높이 520 정도)</div>
+    <input class="url" id="link-url" readonly>
+    <div id="link-msg" style="font-size:13px"></div>
+    <div class="warn" id="link-warn">지금 열린 주소는 OBS에서 쓸 수 없는 미리보기 주소예요. 이 파일을 내려받아 크롬에서 직접 연 뒤 다시 눌러주세요. (또는 Firebase Hosting에 올리면 어디서든 같은 주소로 쓸 수 있어요)</div>
+    <div class="acts"><button class="btn" id="link-close" type="button">닫기</button><button class="btn pri" id="link-copy" type="button">다시 복사</button></div>
+  </div>
+</div>
+
+<div class="modal" id="fb-modal">
+  <div class="box">
+    <h2>🔥 Firebase 연결</h2>
+    <div style="color:var(--sub);font-size:13px">연결하면 다른 기기·OBS에서도 후원 순위가 실시간으로 똑같이 보여요.</div>
+    <div class="status"><span class="dot" id="fb-dot2"></span><span id="fb-msg">연결 안 됨</span></div>
+    <b style="font-size:13px">처음 한 번만 하면 돼요</b>
+    <ol>
+      <li>Firebase 콘솔 → <b>빌드 → Firestore Database → 데이터베이스 만들기</b></li>
+      <li><b>규칙</b> 탭에 아래 내용을 붙여넣고 <b>게시</b></li>
+    </ol>
+    <pre id="rules">rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+    match /overlay/main { allow read, write: if true; }
+  }
+}</pre>
+    <button class="btn line" id="copy-rules" type="button">규칙 복사</button>
+    <div style="margin:14px 0 6px;font-size:13px"><b>Firebase 설정값</b> <span style="color:var(--sub)">(다른 프로젝트로 바꿀 때만 붙여넣기)</span></div>
+    <textarea id="cfg-text" spellcheck="false"></textarea>
+    <div class="acts">
+      <button class="btn" id="fb-off" type="button">연결 끊기</button>
+      <button class="btn" id="fb-close" type="button">닫기</button>
+      <button class="btn pri" id="fb-save" type="button">저장하고 연결</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"><span id="toast-msg"></span><button id="toast-undo" style="display:none" type="button">되돌리기</button></div>
+
+<script>
+const DEFAULT_CFG={apiKey:"AIzaSyDvxWUsemd0_U5eF_G2GNxWIKQyQMNPZ1U",authDomain:"noogi-48c4a.firebaseapp.com",projectId:"noogi-48c4a",storageBucket:"noogi-48c4a.firebasestorage.app",messagingSenderId:"503202497617",appId:"1:503202497617:web:540bfa3c0b19252360e470"};
+const OVERLAY=new URLSearchParams(location.search).get('mode')==='overlay';
+const $=s=>document.querySelector(s);
+const K={d:'notion_donors_v4',b:'notion_banks_v4',s:'notion_settings_v4',cfg:'sdo_fb_cfg',off:'sdo_fb_off',mode:'sdo_mode'};
+const CLIENT=Math.random().toString(36).slice(2);
+const DEF_SETTINGS={ovTitle:'★계좌후원순위★',title:'배고파..',goal:200000,maxRanks:4,theme:'white',bg:'white'};
+const PT=(()=>{try{const d=document.createElement('div');d.contentEditable='plaintext-only';return d.contentEditable==='plaintext-only'}catch(e){return false}})();
+
+/* 저장소(막혀 있어도 동작하도록 메모리 대체) */
+const mem={};
+const store={
+  get(k){try{return localStorage.getItem(k)}catch(e){return k in mem?mem[k]:null}},
+  set(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=v}},
+  del(k){try{localStorage.removeItem(k)}catch(e){delete mem[k]}}
+};
+
+let donors=[],banks=[],settings={...DEF_SETTINGS},mode=store.get(K.mode)||'manage';
+let tableDirty=false,banksDirty=false;
+
+/* ---------- utils ---------- */
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const won=n=>n.toLocaleString('ko-KR')+'원';
+const compact=n=>n>=10000?(Number.isInteger(n/10000)?(n/10000)+'만':(n/10000).toFixed(1)+'만'):n.toLocaleString('ko-KR');
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+function parseMoney(s){
+  s=String(s).replace(/[,\s원]/g,'');if(!s)return NaN;
+  let sum=0,f=false;
+  s.replace(/(\d+(?:\.\d+)?)만/,(_,n)=>{sum+=parseFloat(n)*10000;f=true});
+  s.replace(/(\d+(?:\.\d+)?)천/,(_,n)=>{sum+=parseFloat(n)*1000;f=true});
+  if(f)return Math.round(sum);
+  return /^\d+$/.test(s)?parseInt(s,10):NaN;
+}
+const sorted=()=>[...donors].sort((a,b)=>b.amount-a.amount);
+const total=()=>donors.reduce((a,d)=>a+d.amount,0);
+const editMode=()=>!OVERLAY&&mode==='edit';
+const inField=sel=>{const a=document.activeElement;return !!(a&&a.matches&&a.matches(sel))};
+
+let toastTimer;
+function toast(msg,undo){
+  $('#toast-msg').textContent=msg;
+  const u=$('#toast-undo');u.style.display=undo?'':'none';u.onclick=()=>{undo&&undo();$('#toast').classList.remove('show')};
+  $('#toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),undo?5000:2400);
+}
+
+/* ---------- storage ---------- */
+function load(){
+  const g=k=>{try{return JSON.parse(store.get(k))}catch(e){return null}};
+  donors=g(K.d)||g('notion_donors_v3')||[];
+  banks=g(K.b)||g('notion_banks_v3')||[{id:'1',text:'카카오뱅크 3333-09-3878104 김진욱',active:true}];
+  settings={...DEF_SETTINGS,...(g(K.s)||g('notion_settings_v3')||{})};
+}
+function writeLocal(){store.set(K.d,JSON.stringify(donors));store.set(K.b,JSON.stringify(banks));store.set(K.s,JSON.stringify(settings))}
+function persist(){writeLocal();pushRemote()}
+window.addEventListener('storage',e=>{if([K.d,K.b,K.s].includes(e.key)){load();refreshAll()}});
+
+/* ---------- 오버레이 카드 (edit=true면 글자를 바로 수정) ---------- */
+function cardHTML(edit){
+  const E=(kind,val,ph,id)=>edit?`<span class="ce" contenteditable="${PT?'plaintext-only':'true'}" spellcheck="false" data-e="${kind}" ${id?`data-id="${id}"`:''} data-ph="${ph||''}">${esc(val)}</span>`:esc(val);
+  const max=settings.maxRanks,goal=settings.goal||100000,t=total(),pct=Math.min(Math.round(t/goal*100),999);
+  const all=sorted().filter(d=>edit||d.amount>0||d.name);
+  const shown=(!edit&&max>0)?all.slice(0,max):all;
+  const rows=shown.length?shown.map((d,i)=>`<div class="ov-row${edit&&max>0&&i>=max?' dim':''}">
+    <span>${i+1}등 ${E('name',d.name||(edit?'':'이름없음'),'이름',d.id)}</span>
+    <span>${E('amt',d.amount,'0',d.id)}원${i===0?' 👑':''}</span>
+    ${edit?`<button class="ov-x" data-delid="${d.id}" title="삭제" type="button">✕</button>`:''}</div>`).join('')
+    :`<div class="ov-none">${edit?'아래 “+ 후원자 추가”를 눌러보세요':'아직 후원이 없어요'}</div>`;
+  const bk=banks.filter(b=>b.active).map(b=>`<div>${E('bank',b.text,'계좌 입력',b.id)}</div>`).join('');
+  return `<div class="ov ${settings.theme==='black'?'black':'white'}"><h3>${E('otitle',settings.ovTitle,'제목 입력')}</h3>${rows}
+  <div class="ov-goal"><div class="ov-line"><span>목표(${compact(t)}/${E('goal',compact(goal),'목표')})${E('gtitle',settings.title||'','문구')}</span><b>${pct}%</b></div>
+  <div class="bar"><i style="width:${Math.min(pct,100)}%"></i></div><div class="ov-bank">${bk}</div></div></div>`;
+}
+
+/* ---------- renders ---------- */
+function renderPreview(force){
+  const el=$('#preview');
+  if(!force&&inField('#preview .ce'))return;
+  el.className='prev'+(settings.bg==='transparent'?' tp':'');
+  el.innerHTML=cardHTML(editMode());
+}
+function refreshStats(){$('#count').textContent=donors.length+'명';$('#total').textContent=won(total())}
+function refreshLite(){
+  if(OVERLAY){
+    document.body.style.background=settings.bg==='transparent'?'transparent':'#fff';
+    $('#overlay-root').innerHTML=cardHTML(false);return;
+  }
+  renderPreview();refreshStats();
+}
+function renderTable(force){
+  if(!force&&inField('#tb .cell')){tableDirty=true;return}
+  tableDirty=false;
+  const s=sorted();
+  $('#tb').innerHTML=s.length?s.map((d,i)=>`<tr data-id="${d.id}">
+    <td class="rk">${i+1}</td>
+    <td><input class="cell" data-f="name" value="${esc(d.name)}" placeholder="이름"></td>
+    <td><input class="cell num" data-f="amount" value="${d.amount.toLocaleString('ko-KR')}" autocomplete="off"></td>
+    <td class="qa"><button data-add="1000" type="button">+1천</button> <button data-add="5000" type="button">+5천</button> <button data-add="10000" type="button">+1만</button></td>
+    <td class="dl"><button data-del title="삭제" type="button">✕</button></td></tr>`).join('')
+    :'<tr class="empty"><td colspan="5">위 입력창에 “이름 금액”을 쓰고 Enter를 눌러보세요.</td></tr>';
+}
+function renderBanks(force){
+  if(!force&&inField('#banks .cell')){banksDirty=true;return}
+  banksDirty=false;
+  $('#banks').innerHTML=banks.map(b=>`<div class="bank ${b.active?'':'off'}" data-id="${b.id}">
+    <input type="checkbox" ${b.active?'checked':''}><input class="cell" value="${esc(b.text)}" placeholder="은행 계좌번호 예금주">
+    <button class="x" data-delbank type="button">✕</button></div>`).join('');
+}
+function fillSettings(){
+  if(!inField('#s-otitle'))$('#s-otitle').value=settings.ovTitle||'';
+  if(!inField('#s-title'))$('#s-title').value=settings.title||'';
+  if(!inField('#s-goal'))$('#s-goal').value=won(settings.goal||0);
+  $('#s-ranks').value=String(settings.maxRanks);
+  document.querySelectorAll('.seg').forEach(g=>g.querySelectorAll('button').forEach(b=>b.classList.toggle('on',settings[g.dataset.k]===b.dataset.v)));
+}
+function refreshAll(){
+  if(!OVERLAY){renderTable();renderBanks();fillSettings()}
+  refreshLite();
+}
+function setMode(m){
+  mode=m;store.set(K.mode,m);
+  document.body.classList.toggle('mode-edit',m==='edit');
+  document.querySelectorAll('.modes button').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));
+  renderPreview(true);
+}
+document.querySelectorAll('.modes button').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+
+/* ---------- 후원자 표 (클릭하면 바로 한 글자씩 수정) ---------- */
+const tb=$('#tb');
+const rowDonor=el=>donors.find(d=>d.id===el.closest('tr').dataset.id);
+tb.addEventListener('keydown',e=>{
+  const el=e.target;if(!el.matches('.cell'))return;
+  if(e.key==='Enter'){
+    e.preventDefault();
+    if(el.dataset.f==='name')el.closest('tr').querySelector('[data-f=amount]').focus();
+    else el.blur();
+  }else if(e.key==='Escape'){el.dataset.cancel='1';el.blur()}
+});
+tb.addEventListener('focusout',e=>{
+  const el=e.target;if(!el.matches('.cell'))return;
+  const d=rowDonor(el);
+  if(d&&!el.dataset.cancel){
+    if(el.dataset.f==='name')d.name=el.value.trim();
+    else{const v=parseMoney(el.value);if(!isNaN(v))d.amount=v}
+    persist();
+  }
+  if(d){el.value=el.dataset.f==='amount'?d.amount.toLocaleString('ko-KR'):d.name}
+  delete el.dataset.cancel;
+  refreshLite();
+  setTimeout(()=>renderTable(),0);
+});
+tb.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  const d=rowDonor(b);if(!d)return;
+  if(b.dataset.add){d.amount+=parseInt(b.dataset.add);persist();refreshLite();renderTable(true)}
+  else if('del' in b.dataset)deleteDonor(d);
+});
+function deleteDonor(d){
+  const idx=donors.indexOf(d);donors=donors.filter(x=>x!==d);persist();refreshLite();renderTable(true);
+  toast(`${d.name||'후원자'} 삭제됨`,()=>{donors.splice(idx,0,d);persist();refreshLite();renderTable(true)});
+}
+$('#add-donor').onclick=()=>{
+  const d={id:uid(),name:'',amount:0};donors.push(d);persist();refreshLite();renderTable(true);
+  const inp=tb.querySelector(`tr[data-id="${d.id}"] [data-f=name]`);inp&&inp.focus();
+};
+
+/* ---------- 빠른 입력 (폼 없이 Enter 처리, 한글 입력 대응) ---------- */
+const qi=$('#quick-input');let pendingEnter=false;
+function quickAdd(){
+  const hint=$('#quick-hint'),parts=qi.value.trim().split(/\s+/);
+  const err=m=>{hint.textContent=m;hint.classList.add('err')};
+  if(!qi.value.trim())return;
+  if(parts.length<2)return err('이름과 금액을 같이 써주세요. 예) 손정연 10402');
+  const amount=parseMoney(parts.pop()),name=parts.join(' ');
+  if(isNaN(amount)||amount<=0)return err('금액을 읽을 수 없어요. 예) 10000 또는 1.5만');
+  const t=donors.find(d=>d.name===name);
+  if(t){t.amount+=amount;hint.textContent=`${name}님 ${won(amount)} 합산 → ${won(t.amount)}`}
+  else{donors.push({id:uid(),name,amount});hint.textContent=`${name}님 ${won(amount)} 추가했어요`}
+  hint.classList.remove('err');
+  qi.value='';persist();refreshLite();renderTable();
+}
+qi.addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;
+  e.preventDefault();
+  if(e.isComposing||e.keyCode===229){pendingEnter=true;return}
+  quickAdd();
+});
+qi.addEventListener('compositionend',()=>{if(pendingEnter){pendingEnter=false;setTimeout(quickAdd,0)}});
+$('#quick-btn').onclick=()=>{quickAdd();qi.focus()};
+
+/* ---------- 설정 ---------- */
+$('#s-otitle').addEventListener('input',e=>{settings.ovTitle=e.target.value;persist();refreshLite()});
+$('#s-title').addEventListener('input',e=>{settings.title=e.target.value;persist();refreshLite()});
+$('#s-goal').addEventListener('keydown',e=>{if(e.key==='Enter')e.target.blur()});
+$('#s-goal').addEventListener('focus',e=>{e.target.value=String(settings.goal||'')});
+$('#s-goal').addEventListener('blur',e=>{
+  const v=parseMoney(e.target.value);if(!isNaN(v)&&v>0)settings.goal=v;
+  e.target.value=won(settings.goal);persist();refreshLite();
+});
+$('#s-ranks').addEventListener('change',e=>{settings.maxRanks=parseInt(e.target.value);persist();refreshLite()});
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{
+  settings[b.parentNode.dataset.k]=b.dataset.v;persist();fillSettings();renderPreview(true)
+});
+
+/* ---------- 계좌 ---------- */
+const bk=$('#banks');
+bk.addEventListener('change',e=>{
+  if(e.target.type!=='checkbox')return;
+  const b=banks.find(x=>x.id===e.target.closest('.bank').dataset.id);b.active=e.target.checked;
+  e.target.closest('.bank').classList.toggle('off',!b.active);persist();refreshLite();
+});
+bk.addEventListener('input',e=>{
+  if(!e.target.matches('.cell'))return;
+  banks.find(x=>x.id===e.target.closest('.bank').dataset.id).text=e.target.value;persist();refreshLite();
+});
+bk.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('.cell'))e.target.blur()});
+bk.addEventListener('focusout',()=>setTimeout(()=>{if(banksDirty)renderBanks()},0));
+bk.addEventListener('click',e=>{
+  const b=e.target.closest('[data-delbank]');if(!b)return;
+  banks=banks.filter(x=>x.id!==b.closest('.bank').dataset.id);persist();renderBanks(true);refreshLite();
+});
+$('#add-bank').onclick=()=>{
+  const b={id:uid(),text:'',active:true};banks.push(b);persist();renderBanks(true);refreshLite();
+  const inp=bk.querySelector(`[data-id="${b.id}"] .cell`);inp&&inp.focus();
+};
+
+/* ---------- 미리보기에서 바로 편집 ---------- */
+const pv=$('#preview');
+pv.addEventListener('input',e=>{
+  const el=e.target,k=el.dataset&&el.dataset.e;if(!k)return;
+  const t=el.textContent;
+  if(k==='otitle')settings.ovTitle=t;
+  else if(k==='gtitle')settings.title=t;
+  else if(k==='name'){const d=donors.find(x=>x.id===el.dataset.id);if(d)d.name=t}
+  else if(k==='bank'){const b=banks.find(x=>x.id===el.dataset.id);if(b)b.text=t}
+  else return;
+  persist();fillSettings();renderTable();renderBanks();refreshStats();
+});
+pv.addEventListener('keydown',e=>{
+  if(!e.target.dataset||!e.target.dataset.e)return;
+  if(e.key==='Enter'){e.preventDefault();e.target.blur()}
+  else if(e.key==='Escape')e.target.blur();
+});
+pv.addEventListener('paste',e=>{
+  if(!e.target.dataset||!e.target.dataset.e)return;
+  e.preventDefault();
+  document.execCommand('insertText',false,(e.clipboardData.getData('text/plain')||'').replace(/\s+/g,' '));
+});
+pv.addEventListener('focusout',e=>{
+  const el=e.target,k=el.dataset&&el.dataset.e;if(!k)return;
+  const t=el.textContent.trim(),d=donors.find(x=>x.id===el.dataset.id);
+  if(k==='amt'){const v=parseMoney(t);if(d&&!isNaN(v))d.amount=v}
+  else if(k==='goal'){const v=parseMoney(t);if(!isNaN(v)&&v>0)settings.goal=v}
+  else if(k==='name'&&d){d.name=t;if(!t&&d.amount===0)donors=donors.filter(x=>x!==d)}
+  else if(k==='bank'&&!t)banks=banks.filter(x=>x.id!==el.dataset.id);
+  persist();fillSettings();renderTable();renderBanks();refreshStats();
+  setTimeout(()=>{if(!inField('#preview .ce'))renderPreview(true)},0);
+});
+pv.addEventListener('click',e=>{
+  const b=e.target.closest('[data-delid]');if(!b)return;
+  const d=donors.find(x=>x.id===b.dataset.delid);if(d)deleteDonor(d);
+});
+$('#ev-add-donor').onclick=()=>{
+  const d={id:uid(),name:'',amount:0};donors.push(d);persist();refreshStats();renderTable(true);renderPreview(true);
+  const el=pv.querySelector(`[data-e=name][data-id="${d.id}"]`);el&&el.focus();
+};
+$('#ev-add-bank').onclick=()=>{
+  const b={id:uid(),text:'',active:true};banks.push(b);persist();renderBanks(true);renderPreview(true);
+  const el=pv.querySelector(`[data-e=bank][data-id="${b.id}"]`);el&&el.focus();
+};
+
+/* ---------- OBS 링크 (복사가 막혀도 링크를 보여줌) ---------- */
+const overlayURL=()=>location.href.split('#')[0].split('?')[0]+'?mode=overlay';
+function copyText(t){
+  try{
+    const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0;top:0';
+    document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();
+    if(ok)return Promise.resolve(true);
+  }catch(e){}
+  return navigator.clipboard?navigator.clipboard.writeText(t).then(()=>true,()=>false):Promise.resolve(false);
+}
+function showCopyResult(ok){
+  $('#link-msg').innerHTML=ok?'✅ <b>복사됐어요.</b> OBS에 붙여넣기만 하면 돼요.':'자동 복사가 막혀 있어요. 위 링크를 클릭해서 <b>Ctrl+C</b>로 복사하세요.';
+  const u=$('#link-url');u.focus();u.select();
+}
+$('#copy-link').onclick=()=>{
+  const u=overlayURL();
+  $('#link-url').value=u;
+  $('#link-warn').style.display=/^(https?|file):$/.test(location.protocol)?'none':'block';
+  $('#link-modal').classList.add('show');
+  copyText(u).then(showCopyResult);
+};
+$('#link-copy').onclick=()=>copyText($('#link-url').value).then(showCopyResult);
+$('#link-close').onclick=()=>$('#link-modal').classList.remove('show');
+$('#link-modal').addEventListener('mousedown',e=>{if(e.target.id==='link-modal')e.target.classList.remove('show')});
+$('#link-url').addEventListener('focus',e=>e.target.select());
+$('#open-ov').href=overlayURL();
+
+let resetArmed=false;
+$('#reset').onclick=e=>{
+  if(!resetArmed){resetArmed=true;e.target.textContent='정말 삭제할까요? 한 번 더 누르면 지워져요';setTimeout(()=>{resetArmed=false;e.target.textContent='모든 데이터 초기화'},4000);return}
+  resetArmed=false;e.target.textContent='모든 데이터 초기화';
+  donors=[];banks=[];settings={...DEF_SETTINGS,title:''};persist();refreshAll();toast('초기화했어요');
+};
+
+/* ---------- Firebase (Firestore: overlay/main) ---------- */
+let fb=null,pushTimer=null;
+function getCfg(){try{return JSON.parse(store.get(K.cfg))||DEFAULT_CFG}catch(e){return DEFAULT_CFG}}
+function setStatus(st,msg){
+  const label={off:'연결 안 됨',connecting:'연결 중…',on:'실시간 동기화 중',error:'연결 오류'}[st];
+  $('#fb-dot').className='dot '+st;$('#fb-dot2').className='dot '+st;
+  $('#fb-text').textContent=label;$('#fb-msg').textContent=msg||label;
+}
+function fbError(err){
+  const c=(err&&err.code)||'';
+  let m='연결에 실패했어요. ';
+  if(c.includes('permission'))m+='Firestore 규칙에서 읽기/쓰기가 막혀 있어요. 규칙을 위 내용으로 게시해주세요.';
+  else if(c.includes('not-found')||c.includes('unavailable'))m+='Firestore 데이터베이스를 먼저 만들어야 해요.';
+  else m+=(err&&err.message)||'알 수 없는 오류';
+  setStatus('error',m);
+}
+async function initFirebase(){
+  if(store.get(K.off)==='1'){setStatus('off','연결 안 됨');return}
+  const cfg=getCfg();setStatus('connecting','연결 중…');
+  try{
+    const V='10.12.2';
+    const [{initializeApp},{getFirestore,doc,onSnapshot,setDoc}]=await Promise.all([
+      import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`),
+      import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`)]);
+    const db=getFirestore(initializeApp(cfg));
+    fb={ref:doc(db,'overlay','main'),setDoc};
+    onSnapshot(fb.ref,snap=>{
+      setStatus('on','실시간 동기화 중 (프로젝트: '+cfg.projectId+')');
+      if(snap.metadata.hasPendingWrites)return;
+      if(!snap.exists()){if(!OVERLAY)pushRemote();return}
+      const d=snap.data();if(d.clientId===CLIENT)return;
+      donors=d.donors||[];banks=d.banks||[];settings={...DEF_SETTINGS,...(d.settings||{})};
+      writeLocal();refreshAll();
+    },fbError);
+  }catch(err){fbError(err)}
+}
+function pushRemote(){
+  if(!fb||OVERLAY)return;
+  clearTimeout(pushTimer);
+  pushTimer=setTimeout(()=>{
+    fb.setDoc(fb.ref,{donors,banks,settings,clientId:CLIENT,updatedAt:Date.now()}).catch(fbError);
+  },300);
+}
+const fm=$('#fb-modal');
+$('#fb-pill').onclick=()=>{$('#cfg-text').value=JSON.stringify(getCfg(),null,2);fm.classList.add('show')};
+$('#fb-close').onclick=()=>fm.classList.remove('show');
+fm.addEventListener('mousedown',e=>{if(e.target===fm)fm.classList.remove('show')});
+$('#copy-rules').onclick=()=>copyText($('#rules').textContent).then(ok=>toast(ok?'규칙을 복사했어요':'복사가 막혀 있어요. 직접 드래그해서 복사하세요'));
+$('#fb-save').onclick=()=>{
+  const cfg={};
+  $('#cfg-text').value.replace(/["']?(\w+)["']?\s*:\s*["']([^"']+)["']/g,(_,k,v)=>{cfg[k]=v});
+  if(!cfg.apiKey||!cfg.projectId)return toast('apiKey와 projectId가 필요해요');
+  store.set(K.cfg,JSON.stringify(cfg));store.del(K.off);location.reload();
+};
+$('#fb-off').onclick=()=>{store.set(K.off,'1');location.reload()};
+
+/* ---------- boot ---------- */
+if(OVERLAY)document.body.classList.add('overlay');
+load();refreshAll();setMode(mode);initFirebase();
+</script>
+</body>
+</html>
