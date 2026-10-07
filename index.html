@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>계좌후원 오버레이</title>
+<title>누기 계좌후원순위</title>
 <script>try{if(localStorage.getItem('sdo_theme')==='dark'&&!/mode=overlay/.test(location.search))document.documentElement.dataset.theme='dark'}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -76,6 +76,21 @@ select.cell{cursor:pointer}
 .bank.off .cell{text-decoration:line-through;color:var(--sub)}
 .foot{margin-top:50px;font-size:12px}
 .foot button{color:var(--sub)}.foot button:hover{color:var(--red)}
+/* 기타 후원 */
+.left{display:flex;flex-direction:column;gap:44px;min-width:0}
+.o-form{display:flex;gap:8px;flex-wrap:wrap}
+.o-form input{padding:9px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--sb);outline:none;min-width:0}
+.o-form input:focus{border-color:var(--ac);box-shadow:0 0 0 2px rgba(46,170,220,.25);background:var(--bg)}
+#o-desc{flex:1 1 180px}#o-amt{flex:0 1 150px;text-align:right;font-weight:700}
+.o-form .btn{padding:0 18px}
+.qrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.qb{padding:5px 11px;border-radius:6px;font-size:13px;font-weight:700;border:1px solid var(--bd);background:var(--sb);font-variant-numeric:tabular-nums}
+.qb.plus{color:var(--ok)}.qb.minus{color:var(--red)}
+.qb:hover{background:var(--hv)}.qb:active{transform:translateY(1px)}
+.o-sum{color:var(--sub);font-size:12.5px;margin:6px 0 10px}.o-sum b{color:var(--tx)}
+td.ot{width:78px;padding:0 6px;color:var(--sub);font-size:12px;white-space:nowrap}
+.cell.pos{color:var(--ok)}.cell.neg{color:var(--red)}
+.ov-line.ov-other{font-size:13px;margin-bottom:8px}
 /* overlay card */
 .ov{width:100%;max-width:400px;border-radius:10px;padding:20px;font-weight:700;position:relative}
 .ov.white{background:#fff;color:#0f172a;border:1px solid #e2e8f0}
@@ -100,7 +115,7 @@ select.cell{cursor:pointer}
 .edit-note{display:none;text-align:center;color:var(--sub);font-size:12.5px;margin-top:10px}
 body.mode-edit .edit-tools{display:flex}body.mode-edit .edit-note{display:block}
 body.mode-edit .cols{grid-template-columns:minmax(0,520px);justify-content:center;gap:34px}
-body.mode-edit #sec-table,body.mode-edit #bank-sec{display:none}
+body.mode-edit .left,body.mode-edit #bank-sec{display:none}
 body.mode-edit .side{position:static}
 body.mode-edit .prev{padding:34px 44px}
 body.overlay .top,body.overlay .page{display:none}
@@ -135,15 +150,16 @@ body.overlay #overlay-root{display:flex;padding:16px}
 </header>
 
 <main class="page">
-  <h1>🍚 후원 순위 관리</h1>
+  <h1>후원 순위 관리</h1>
 
   <div class="quick">
-    <input id="quick-input" placeholder="이름 금액 입력 후 Enter   예) 손정연 10402  /  허성윤 1.5만" autocomplete="off">
+    <input id="quick-input" placeholder="이름 금액 입력 후 Enter   예) 홍길동 10402  /  누기님 1.5만" autocomplete="off">
     <button class="btn pri" id="quick-btn" type="button">추가</button>
   </div>
   <div class="hint" id="quick-hint">같은 이름이 있으면 금액이 자동으로 합쳐져요.</div>
 
   <div class="cols">
+    <div class="left">
     <section id="sec-table">
       <div class="head">
         <h2>후원자</h2><span class="tag" id="count">0명</span>
@@ -157,6 +173,23 @@ body.overlay #overlay-root{display:flex;padding:16px}
       <button class="addrow" id="add-donor" type="button">+ 새 후원자</button>
       <div class="hint" style="margin:8px 0 0">칸을 클릭하면 바로 수정돼요. 금액에 <b>1.5만</b>처럼 써도 돼요.</div>
     </section>
+
+    <section id="sec-other">
+      <div class="head">
+        <h2>기타 후원</h2><span class="grow"></span>
+        <label style="display:flex;align-items:center;gap:6px;color:var(--sub);font-size:13px;cursor:pointer"><input type="checkbox" id="o-show" style="accent-color:var(--ac)"> 미리보기에 표시</label>
+      </div>
+      <div class="prop"><label>현재 합계</label><input class="cell num" id="o-total-in" autocomplete="off"></div>
+      <div class="o-form" style="margin-top:12px">
+        <input id="o-amt" placeholder="금액 입력 후 Enter   /   빼기는 -5000" autocomplete="off" style="flex:1 1 200px;text-align:left">
+        <button class="btn pri" id="o-add" type="button">추가</button>
+      </div>
+      <div class="qrow" id="q-plus"></div>
+      <div class="qrow" id="q-minus"></div>
+      <div class="hint" id="o-hint" style="margin:8px 0 6px">금액을 넣으면 더해지고, 앞에 <b>-</b>를 붙이면 빠져요.</div>
+      <div class="o-sum">전체(순위 + 기타) <b id="grand">0원</b></div>
+    </section>
+    </div>
 
     <aside class="side">
       <div>
@@ -180,6 +213,10 @@ body.overlay #overlay-root{display:flex;padding:16px}
           </select></div>
         <div class="prop"><label>카드 색</label>
           <div class="seg" data-k="theme"><button data-v="white">☀️ 흰색</button><button data-v="black">🌙 검정</button></div></div>
+        <div class="prop"><label>기타 후원 목표 합산</label>
+          <div class="seg" data-k="otherGoal"><button data-v="yes">포함</button><button data-v="no">제외</button></div></div>
+        <div class="prop"><label>기타 후원 카드 표시</label>
+          <div class="seg" data-k="otherShow"><button data-v="yes">표시</button><button data-v="no">숨김</button></div></div>
         <div class="prop"><label>바깥 배경</label>
           <div class="seg" data-k="bg"><button data-v="white">흰색</button><button data-v="transparent">투명</button></div></div>
       </div>
@@ -241,9 +278,9 @@ service cloud.firestore {
 const DEFAULT_CFG={apiKey:"AIzaSyDvxWUsemd0_U5eF_G2GNxWIKQyQMNPZ1U",authDomain:"noogi-48c4a.firebaseapp.com",projectId:"noogi-48c4a",storageBucket:"noogi-48c4a.firebasestorage.app",messagingSenderId:"503202497617",appId:"1:503202497617:web:540bfa3c0b19252360e470"};
 const OVERLAY=new URLSearchParams(location.search).get('mode')==='overlay';
 const $=s=>document.querySelector(s);
-const K={d:'notion_donors_v4',b:'notion_banks_v4',s:'notion_settings_v4',cfg:'sdo_fb_cfg',off:'sdo_fb_off',mode:'sdo_mode'};
+const K={d:'notion_donors_v4',b:'notion_banks_v4',s:'notion_settings_v4',cfg:'sdo_fb_cfg',off:'sdo_fb_off',mode:'sdo_mode',o:'notion_others_v4'};
 const CLIENT=Math.random().toString(36).slice(2);
-const DEF_SETTINGS={ovTitle:'★계좌후원순위★',title:'배고파..',goal:200000,maxRanks:4,theme:'white',bg:'white'};
+const DEF_SETTINGS={ovTitle:'★계좌후원순위★',title:'배고파..',goal:200000,maxRanks:4,theme:'white',bg:'white',otherGoal:'yes',otherShow:'yes',otherAmount:0};
 const PT=(()=>{try{const d=document.createElement('div');d.contentEditable='plaintext-only';return d.contentEditable==='plaintext-only'}catch(e){return false}})();
 
 /* 저장소(막혀 있어도 동작하도록 메모리 대체) */
@@ -272,6 +309,15 @@ function parseMoney(s){
 }
 const sorted=()=>[...donors].sort((a,b)=>b.amount-a.amount);
 const total=()=>donors.reduce((a,d)=>a+d.amount,0);
+const otherTotal=()=>settings.otherAmount||0;
+const goalTotal=()=>total()+(settings.otherGoal!=='no'?otherTotal():0);
+const signed=n=>(n>0?'+':'')+n.toLocaleString('ko-KR');
+function parseSigned(s){
+  s=String(s).trim();let neg=false;
+  if(/^[-−–—]/.test(s)){neg=true;s=s.slice(1)}else if(s[0]==='+')s=s.slice(1);
+  const v=parseMoney(s);return isNaN(v)?NaN:(neg?-v:v);
+}
+const fmtTime=ts=>{const d=new Date(ts),p=n=>String(n).padStart(2,'0');return `${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`};
 const editMode=()=>!OVERLAY&&mode==='edit';
 const inField=sel=>{const a=document.activeElement;return !!(a&&a.matches&&a.matches(sel))};
 
@@ -288,6 +334,7 @@ function load(){
   donors=g(K.d)||g('notion_donors_v3')||[];
   banks=g(K.b)||g('notion_banks_v3')||[{id:'1',text:'카카오뱅크 3333-09-3878104 김진욱',active:true}];
   settings={...DEF_SETTINGS,...(g(K.s)||g('notion_settings_v3')||{})};
+  const old=g('notion_others_v4');if(old&&old.length){settings.otherAmount=(settings.otherAmount||0)+old.reduce((a,o)=>a+o.amount,0);store.del('notion_others_v4');store.set(K.s,JSON.stringify(settings))}
 }
 function writeLocal(){store.set(K.d,JSON.stringify(donors));store.set(K.b,JSON.stringify(banks));store.set(K.s,JSON.stringify(settings))}
 function persist(){writeLocal();pushRemote()}
@@ -296,7 +343,7 @@ window.addEventListener('storage',e=>{if([K.d,K.b,K.s].includes(e.key)){load();r
 /* ---------- 오버레이 카드 (edit=true면 글자를 바로 수정) ---------- */
 function cardHTML(edit){
   const E=(kind,val,ph,id)=>edit?`<span class="ce" contenteditable="${PT?'plaintext-only':'true'}" spellcheck="false" data-e="${kind}" ${id?`data-id="${id}"`:''} data-ph="${ph||''}">${esc(val)}</span>`:esc(val);
-  const max=settings.maxRanks,goal=settings.goal||100000,t=total(),pct=Math.min(Math.round(t/goal*1000)/10,999);
+  const max=settings.maxRanks,goal=settings.goal||100000,t=goalTotal(),pct=Math.min(Math.round(t/goal*1000)/10,999);
   const all=sorted().filter(d=>edit||d.amount>0||d.name);
   const shown=(!edit&&max>0)?all.slice(0,max):all;
   const rows=shown.length?shown.map((d,i)=>`<div class="ov-row${edit&&max>0&&i>=max?' dim':''}">
@@ -306,7 +353,7 @@ function cardHTML(edit){
     :`<div class="ov-none">${edit?'아래 “+ 후원자 추가”를 눌러보세요':'아직 후원이 없어요'}</div>`;
   const bk=banks.filter(b=>b.active).map(b=>`<div>${E('bank',b.text,'계좌 입력',b.id)}</div>`).join('');
   return `<div class="ov ${settings.theme==='black'?'black':'white'}"><h3>${E('otitle',settings.ovTitle,'제목 입력')}</h3>${rows}
-  <div class="ov-goal"><div class="ov-line"><span>목표(${compact(t)}/${E('goal',compact(goal),'목표')})${E('gtitle',settings.title||'','문구')}</span><b>${pct.toFixed(1)}%</b></div>
+  <div class="ov-goal">${settings.otherShow!=='no'&&otherTotal()!==0?`<div class="ov-line ov-other"><span>💝 기타 후원</span><b>${won(otherTotal())}</b></div>`:''}<div class="ov-line"><span>목표(${compact(t)}/${E('goal',compact(goal),'목표')})${E('gtitle',settings.title||'','문구')}</span><b>${pct.toFixed(1)}%</b></div>
   <div class="bar"><i style="width:${Math.min(pct,100)}%"></i></div><div class="ov-bank">${bk}</div></div></div>`;
 }
 
@@ -317,7 +364,10 @@ function renderPreview(force){
   el.className='prev'+(settings.bg==='transparent'?' tp':'');
   el.innerHTML=cardHTML(editMode());
 }
-function refreshStats(){$('#count').textContent=donors.length+'명';$('#total').textContent=won(total())}
+function refreshStats(){
+  $('#count').textContent=donors.length+'명';$('#total').textContent=won(total());
+  if(!inField('#o-total-in'))$('#o-total-in').value=won(otherTotal());$('#grand').textContent=won(total()+otherTotal());
+}
 function refreshLite(){
   if(OVERLAY){
     document.body.style.background=settings.bg==='transparent'?'transparent':'#fff';
@@ -348,11 +398,12 @@ function fillSettings(){
   if(!inField('#s-otitle'))$('#s-otitle').value=settings.ovTitle||'';
   if(!inField('#s-title'))$('#s-title').value=settings.title||'';
   if(!inField('#s-goal'))$('#s-goal').value=won(settings.goal||0);
+  $('#o-show').checked=settings.otherShow!=='no';
   $('#s-ranks').value=String(settings.maxRanks);
   document.querySelectorAll('.seg').forEach(g=>g.querySelectorAll('button').forEach(b=>b.classList.toggle('on',settings[g.dataset.k]===b.dataset.v)));
 }
 function refreshAll(){
-  if(!OVERLAY){renderTable();renderBanks();fillSettings()}
+  if(!OVERLAY){renderTable();renderBanks();renderOthers();fillSettings()}
   refreshLite();
 }
 function setMode(m){
@@ -431,6 +482,33 @@ qi.addEventListener('keydown',e=>{
 qi.addEventListener('compositionend',()=>{if(pendingEnter){pendingEnter=false;setTimeout(quickAdd,0)}});
 $('#quick-btn').onclick=()=>{quickAdd();qi.focus()};
 
+/* ---------- 기타 후원 (금액만 +/-) ---------- */
+const QUICK=[1000,5000,10000,30000,50000];
+const qLabel=n=>n>=10000?(n/10000)+'만':(n/1000)+'천';
+$('#q-plus').innerHTML=QUICK.map(n=>`<button class="qb plus" data-q="${n}" type="button">+${qLabel(n)}</button>`).join('');
+$('#q-minus').innerHTML=QUICK.map(n=>`<button class="qb minus" data-q="${-n}" type="button">-${qLabel(n)}</button>`).join('');
+function addOther(amount){
+  const prev=otherTotal();settings.otherAmount=prev+amount;persist();refreshLite();
+  const h=$('#o-hint');h.classList.remove('err');
+  h.textContent=`${signed(amount)}원 ${amount>0?'추가':'차감'} → 기타 합계 ${won(otherTotal())}`;
+  toast(`${signed(amount)}원 ${amount>0?'추가':'차감'}됨`,()=>{settings.otherAmount=prev;persist();refreshLite()});
+}
+function submitOther(){
+  const el=$('#o-amt'),v=parseSigned(el.value),h=$('#o-hint');
+  if(!el.value.trim())return;
+  if(isNaN(v)||v===0){h.textContent='금액을 읽을 수 없어요. 예) 5000, 1.5만, -3000';h.classList.add('err');return}
+  addOther(v);el.value='';
+}
+$('#o-amt').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();if(!e.isComposing)submitOther()}});
+$('#o-add').onclick=()=>{submitOther();$('#o-amt').focus()};
+document.querySelectorAll('.qb').forEach(b=>b.onclick=()=>addOther(parseInt(b.dataset.q)));
+const oti=$('#o-total-in');
+oti.addEventListener('focus',()=>{oti.value=String(otherTotal());oti.select()});
+oti.addEventListener('keydown',e=>{if(e.key==='Enter')oti.blur()});
+oti.addEventListener('blur',()=>{const v=parseSigned(oti.value);if(!isNaN(v))settings.otherAmount=v;oti.value=won(otherTotal());persist();refreshLite()});
+$('#o-show').addEventListener('change',e=>{settings.otherShow=e.target.checked?'yes':'no';persist();fillSettings();renderPreview(true)});
+function renderOthers(){}
+
 /* ---------- 설정 ---------- */
 $('#s-otitle').addEventListener('input',e=>{settings.ovTitle=e.target.value;persist();refreshLite()});
 $('#s-title').addEventListener('input',e=>{settings.title=e.target.value;persist();refreshLite()});
@@ -442,7 +520,7 @@ $('#s-goal').addEventListener('blur',e=>{
 });
 $('#s-ranks').addEventListener('change',e=>{settings.maxRanks=parseInt(e.target.value);persist();refreshLite()});
 document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{
-  settings[b.parentNode.dataset.k]=b.dataset.v;persist();fillSettings();renderPreview(true)
+  settings[b.parentNode.dataset.k]=b.dataset.v;persist();fillSettings();renderPreview(true);refreshStats()
 });
 
 /* ---------- 계좌 ---------- */
