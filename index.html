@@ -4,24 +4,27 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>계좌후원 오버레이</title>
+<script>try{if(localStorage.getItem('sdo_theme')==='dark'&&!/mode=overlay/.test(location.search))document.documentElement.dataset.theme='dark'}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#fff;--tx:#37352f;--sub:#787774;--bd:#e9e9e7;--hv:rgba(55,53,47,.06);--sb:#f7f6f3;--ac:#2eaadc;--red:#eb5757;--ok:#4dab9a}
+:root{--bg:#fff;--tx:#37352f;--sub:#787774;--bd:#e9e9e7;--hv:rgba(55,53,47,.06);--sb:#f7f6f3;--ac:#2eaadc;--red:#eb5757;--ok:#4dab9a;--hd:rgba(255,255,255,.92);--ck1:#eee;--ck2:#fff;--wb:#fff4e5;--wt:#8a5200;--dash:rgba(128,128,128,.45)}
+html[data-theme=dark]{color-scheme:dark;--bg:#191919;--tx:#e6e6e4;--sub:#a0a09c;--bd:#363636;--hv:rgba(255,255,255,.09);--sb:#252525;--hd:rgba(25,25,25,.92);--ck1:#2a2a2a;--ck2:#1f1f1f;--wb:#3a2a10;--wt:#f0c27a;--dash:rgba(255,255,255,.28)}
 *{box-sizing:border-box}
-body{margin:0;background:#fff;color:var(--tx);font:14px/1.5 'Noto Sans KR',-apple-system,'Segoe UI',sans-serif}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.5 'Noto Sans KR',-apple-system,'Segoe UI',sans-serif}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer;background:none;border:0}
-.top{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:8px;padding:10px 20px;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--bd)}
+.top{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:8px;padding:10px 20px;background:var(--hd);backdrop-filter:blur(8px);border-bottom:1px solid var(--bd)}
 .top .name{font-weight:700;margin-right:auto;white-space:nowrap}
 .modes{display:flex;background:var(--sb);border-radius:7px;padding:3px;gap:2px}
 .modes button{padding:4px 12px;border-radius:5px;font-size:13px;color:var(--sub);white-space:nowrap}
-.modes button.on{background:#fff;color:var(--tx);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.modes button.on{background:var(--bg);color:var(--tx);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .btn{padding:5px 11px;border-radius:6px;color:var(--sub);font-size:13px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .btn:hover{background:var(--hv);color:var(--tx)}
 .btn.pri{background:var(--ac);color:#fff;font-weight:500}.btn.pri:hover{background:#2699c7;color:#fff}
-.btn.line{border:1px solid var(--bd)}
+.btn.line{border:1px solid var(--bd);color:var(--tx);background:var(--sb)}.btn.line:hover{background:var(--hv)}
+a.btn{text-decoration:none}
 .dot{width:8px;height:8px;border-radius:50%;background:#bbb;flex-shrink:0}
 .dot.on{background:var(--ok)}.dot.error{background:var(--red)}.dot.connecting{background:#e0a030}
 .page{max-width:1040px;margin:0 auto;padding:40px 24px 90px}
@@ -29,7 +32,7 @@ h1{font-size:32px;font-weight:900;margin:0 0 22px;letter-spacing:-.02em}
 h2{font-size:15px;font-weight:700;margin:0}
 .quick{display:flex;gap:8px}
 .quick input{flex:1;min-width:0;padding:11px 14px;border:1px solid var(--bd);border-radius:8px;background:var(--sb);font-size:15px;outline:none}
-.quick input:focus{border-color:var(--ac);box-shadow:0 0 0 2px rgba(46,170,220,.25);background:#fff}
+.quick input:focus{border-color:var(--ac);box-shadow:0 0 0 2px rgba(46,170,220,.25);background:var(--bg)}
 .quick .btn{padding:0 18px;font-size:14px}
 .hint{color:var(--sub);font-size:12.5px;margin:7px 0 32px;min-height:19px}
 .hint.err{color:var(--red)}
@@ -44,11 +47,11 @@ td{padding:0;border-bottom:1px solid var(--bd);height:42px}
 td.rk{width:34px;color:var(--sub);text-align:center;font-size:12px}
 .cell{width:100%;height:36px;padding:0 8px;background:transparent;border:0;border-radius:5px;outline:none;font-weight:500}
 .cell:hover{background:var(--hv)}
-.cell:focus{background:#fff;box-shadow:inset 0 0 0 2px var(--ac)}
+.cell:focus{background:var(--bg);box-shadow:inset 0 0 0 2px var(--ac)}
 .cell.num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
-td.qa{width:156px;white-space:nowrap;text-align:right;padding-left:6px}
-td.qa button,td.dl button{opacity:0;padding:2px 7px;font-size:11.5px;border-radius:4px;background:var(--hv);color:var(--sub)}
-td.dl{width:34px;text-align:center}td.dl button{background:none;font-size:13px}
+td.qa{width:176px;white-space:nowrap;text-align:right;padding-left:6px}
+td.qa button,td.dl button{opacity:1;padding:3px 9px;font-size:12px;border-radius:5px;background:var(--sb);color:var(--tx);border:1px solid var(--bd)}
+td.dl{width:40px;text-align:center}td.dl button{background:none;border:0;font-size:14px;color:var(--sub);padding:3px 8px}
 tr:hover td.qa button,tr:hover td.dl button{opacity:1}
 td.qa button:hover{color:var(--tx)}td.dl button:hover{color:var(--red)}
 @media(hover:none){td.qa button,td.dl button{opacity:1}}
@@ -56,8 +59,8 @@ td.qa button:hover{color:var(--tx)}td.dl button:hover{color:var(--red)}
 .addrow:hover{background:var(--hv)}
 .empty td{padding:22px 6px;color:var(--sub);text-align:center;height:auto}
 .side{display:flex;flex-direction:column;gap:30px;position:sticky;top:70px}
-.prev{border-radius:10px;padding:24px 34px;display:flex;justify-content:center;border:1px dashed #d9d9d6;background:#fff}
-.prev.tp{background:conic-gradient(#eee 25%,#fff 0 50%,#eee 0 75%,#fff 0) 0 0/16px 16px}
+.prev{border-radius:10px;padding:24px 34px;display:flex;justify-content:center;border:1px dashed var(--dash);background:var(--bg)}
+.prev.tp{background:conic-gradient(var(--ck1) 25%,var(--ck2) 0 50%,var(--ck1) 0 75%,var(--ck2) 0) 0 0/16px 16px}
 .link{font-size:12px;color:var(--sub);text-decoration:none;font-weight:400}.link:hover{color:var(--tx)}
 .prop{display:flex;align-items:center;min-height:38px;border-bottom:1px solid var(--bd)}
 .prop>label{width:88px;color:var(--sub);font-size:13px;flex-shrink:0;padding-left:2px}
@@ -68,7 +71,7 @@ select.cell{cursor:pointer}
 .seg button.on{background:var(--hv);color:var(--tx);font-weight:700}
 .bank{display:flex;align-items:center;gap:4px;border-bottom:1px solid var(--bd);min-height:38px}
 .bank input[type=checkbox]{accent-color:var(--ac);width:16px;height:16px;margin:0 2px 0 4px;flex-shrink:0}
-.bank .x{opacity:0;color:var(--sub);padding:0 10px}.bank:hover .x{opacity:1}.bank .x:hover{color:var(--red)}
+.bank .x{opacity:.75;color:var(--sub);padding:0 10px}.bank:hover .x{opacity:1}.bank .x:hover{color:var(--red)}
 .bank .cell{font-size:13px}
 .bank.off .cell{text-decoration:line-through;color:var(--sub)}
 .foot{margin-top:50px;font-size:12px}
@@ -91,13 +94,13 @@ select.cell{cursor:pointer}
 .ce:empty::before{content:attr(data-ph);opacity:.35}
 .ce:hover{background:rgba(128,128,128,.16)}
 .ce:focus{background:rgba(46,170,220,.2);box-shadow:0 0 0 2px #2eaadc}
-.ov-x{position:absolute;right:-30px;top:0;opacity:0;color:#999;font-size:13px;padding:0 6px}
+.ov-x{position:absolute;right:-30px;top:0;opacity:.7;color:#999;font-size:14px;padding:0 6px}
 .ov-row:hover .ov-x{opacity:1}.ov-x:hover{color:var(--red)}
 .edit-tools{display:none;gap:6px;justify-content:center;margin-top:12px}
 .edit-note{display:none;text-align:center;color:var(--sub);font-size:12.5px;margin-top:10px}
 body.mode-edit .edit-tools{display:flex}body.mode-edit .edit-note{display:block}
 body.mode-edit .cols{grid-template-columns:minmax(0,520px);justify-content:center;gap:34px}
-body.mode-edit #sec-table,body.mode-edit #bank-sec,body.mode-edit #open-ov{display:none}
+body.mode-edit #sec-table,body.mode-edit #bank-sec{display:none}
 body.mode-edit .side{position:static}
 body.mode-edit .prev{padding:34px 44px}
 body.overlay .top,body.overlay .page{display:none}
@@ -106,7 +109,7 @@ body.overlay #overlay-root{display:flex;padding:16px}
 /* modal / toast */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
 .modal.show{display:flex}
-.box{background:#fff;border-radius:12px;padding:24px;width:100%;max-width:520px;max-height:90vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.box{background:var(--bg);color:var(--tx);border-radius:12px;padding:24px;width:100%;max-width:520px;max-height:90vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.25)}
 .box h2{font-size:18px;margin-bottom:6px}
 .box ol{padding-left:18px;margin:10px 0;color:var(--sub);font-size:13px}
 .box textarea{width:100%;height:150px;border:1px solid var(--bd);border-radius:6px;background:var(--sb);padding:8px;font:12px/1.5 ui-monospace,Consolas,monospace;resize:vertical;outline:none}
@@ -114,7 +117,7 @@ body.overlay #overlay-root{display:flex;padding:16px}
 .box pre{background:var(--sb);padding:8px;border-radius:6px;font-size:11px;overflow:auto;margin:6px 0}
 .box input.url{width:100%;padding:9px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--sb);font-size:13px;outline:none;margin:12px 0 8px}
 .status{padding:8px 10px;border-radius:6px;background:var(--sb);font-size:13px;margin:10px 0;display:flex;gap:8px;align-items:center}
-.warn{background:#fff4e5;color:#8a5200;border-radius:6px;padding:8px 10px;font-size:12.5px;margin-top:8px;display:none}
+.warn{background:var(--wb);color:var(--wt);border-radius:6px;padding:8px 10px;font-size:12.5px;margin-top:8px;display:none}
 .acts{display:flex;gap:6px;justify-content:flex-end;margin-top:14px}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#37352f;color:#fff;padding:9px 14px;border-radius:8px;font-size:13px;display:none;gap:12px;align-items:center;z-index:60}
 #toast.show{display:flex}
@@ -126,6 +129,7 @@ body.overlay #overlay-root{display:flex;padding:16px}
 <header class="top">
   <span class="name">📋 계좌후원 오버레이</span>
   <div class="modes"><button data-mode="manage">관리</button><button data-mode="edit">미리보기에서 편집</button></div>
+  <button class="btn line" id="theme-btn" type="button"></button>
   <button class="btn" id="fb-pill"><span class="dot" id="fb-dot"></span><span id="fb-text">Firebase</span></button>
   <button class="btn pri" id="copy-link">OBS 링크</button>
 </header>
@@ -156,7 +160,7 @@ body.overlay #overlay-root{display:flex;padding:16px}
 
     <aside class="side">
       <div>
-        <div class="head"><h2>미리보기</h2><span class="grow"></span><a class="link" id="open-ov" target="_blank">새 창으로 열기</a></div>
+        <div class="head"><h2>미리보기</h2><span class="grow"></span><button class="btn line" id="open-pop" type="button" title="작은 팝업 창으로 열기 (OBS 창 캡처용)">🗗 팝업으로 열기</button><a class="btn line" id="open-ov" target="_blank">↗ 새 탭으로 열기</a></div>
         <div class="prev" id="preview"></div>
         <div class="edit-tools">
           <button class="btn line" id="ev-add-donor" type="button">+ 후원자 추가</button>
@@ -292,7 +296,7 @@ window.addEventListener('storage',e=>{if([K.d,K.b,K.s].includes(e.key)){load();r
 /* ---------- 오버레이 카드 (edit=true면 글자를 바로 수정) ---------- */
 function cardHTML(edit){
   const E=(kind,val,ph,id)=>edit?`<span class="ce" contenteditable="${PT?'plaintext-only':'true'}" spellcheck="false" data-e="${kind}" ${id?`data-id="${id}"`:''} data-ph="${ph||''}">${esc(val)}</span>`:esc(val);
-  const max=settings.maxRanks,goal=settings.goal||100000,t=total(),pct=Math.min(Math.round(t/goal*100),999);
+  const max=settings.maxRanks,goal=settings.goal||100000,t=total(),pct=Math.min(Math.round(t/goal*1000)/10,999);
   const all=sorted().filter(d=>edit||d.amount>0||d.name);
   const shown=(!edit&&max>0)?all.slice(0,max):all;
   const rows=shown.length?shown.map((d,i)=>`<div class="ov-row${edit&&max>0&&i>=max?' dim':''}">
@@ -302,7 +306,7 @@ function cardHTML(edit){
     :`<div class="ov-none">${edit?'아래 “+ 후원자 추가”를 눌러보세요':'아직 후원이 없어요'}</div>`;
   const bk=banks.filter(b=>b.active).map(b=>`<div>${E('bank',b.text,'계좌 입력',b.id)}</div>`).join('');
   return `<div class="ov ${settings.theme==='black'?'black':'white'}"><h3>${E('otitle',settings.ovTitle,'제목 입력')}</h3>${rows}
-  <div class="ov-goal"><div class="ov-line"><span>목표(${compact(t)}/${E('goal',compact(goal),'목표')})${E('gtitle',settings.title||'','문구')}</span><b>${pct}%</b></div>
+  <div class="ov-goal"><div class="ov-line"><span>목표(${compact(t)}/${E('goal',compact(goal),'목표')})${E('gtitle',settings.title||'','문구')}</span><b>${pct.toFixed(1)}%</b></div>
   <div class="bar"><i style="width:${Math.min(pct,100)}%"></i></div><div class="ov-bank">${bk}</div></div></div>`;
 }
 
@@ -328,7 +332,7 @@ function renderTable(force){
   $('#tb').innerHTML=s.length?s.map((d,i)=>`<tr data-id="${d.id}">
     <td class="rk">${i+1}</td>
     <td><input class="cell" data-f="name" value="${esc(d.name)}" placeholder="이름"></td>
-    <td><input class="cell num" data-f="amount" value="${d.amount.toLocaleString('ko-KR')}" autocomplete="off"></td>
+    <td><input class="cell num" data-f="amount" inputmode="numeric" value="${d.amount.toLocaleString('ko-KR')}" autocomplete="off"></td>
     <td class="qa"><button data-add="1000" type="button">+1천</button> <button data-add="5000" type="button">+5천</button> <button data-add="10000" type="button">+1만</button></td>
     <td class="dl"><button data-del title="삭제" type="button">✕</button></td></tr>`).join('')
     :'<tr class="empty"><td colspan="5">위 입력창에 “이름 금액”을 쓰고 Enter를 눌러보세요.</td></tr>';
@@ -369,6 +373,11 @@ tb.addEventListener('keydown',e=>{
     if(el.dataset.f==='name')el.closest('tr').querySelector('[data-f=amount]').focus();
     else el.blur();
   }else if(e.key==='Escape'){el.dataset.cancel='1';el.blur()}
+});
+tb.addEventListener('focusin',e=>{
+  const el=e.target;if(!el.matches('.cell')||el.dataset.f!=='amount')return;
+  const d=rowDonor(el);if(d)el.value=String(d.amount);   /* 쉼표 없이 보여주고 */
+  setTimeout(()=>el.select(),0);                           /* 전체 선택 → 바로 덮어쓰기 */
 });
 tb.addEventListener('focusout',e=>{
   const el=e.target;if(!el.matches('.cell'))return;
@@ -426,7 +435,7 @@ $('#quick-btn').onclick=()=>{quickAdd();qi.focus()};
 $('#s-otitle').addEventListener('input',e=>{settings.ovTitle=e.target.value;persist();refreshLite()});
 $('#s-title').addEventListener('input',e=>{settings.title=e.target.value;persist();refreshLite()});
 $('#s-goal').addEventListener('keydown',e=>{if(e.key==='Enter')e.target.blur()});
-$('#s-goal').addEventListener('focus',e=>{e.target.value=String(settings.goal||'')});
+$('#s-goal').addEventListener('focus',e=>{e.target.value=String(settings.goal||'');e.target.select()});
 $('#s-goal').addEventListener('blur',e=>{
   const v=parseMoney(e.target.value);if(!isNaN(v)&&v>0)settings.goal=v;
   e.target.value=won(settings.goal);persist();refreshLite();
@@ -469,6 +478,10 @@ pv.addEventListener('input',e=>{
   else if(k==='bank'){const b=banks.find(x=>x.id===el.dataset.id);if(b)b.text=t}
   else return;
   persist();fillSettings();renderTable();renderBanks();refreshStats();
+});
+pv.addEventListener('focusin',e=>{
+  const k=e.target.dataset&&e.target.dataset.e;
+  if(k==='amt'||k==='goal'){const r=document.createRange();r.selectNodeContents(e.target);const sel=getSelection();sel.removeAllRanges();sel.addRange(r)}
 });
 pv.addEventListener('keydown',e=>{
   if(!e.target.dataset||!e.target.dataset.e)return;
@@ -529,6 +542,19 @@ $('#link-close').onclick=()=>$('#link-modal').classList.remove('show');
 $('#link-modal').addEventListener('mousedown',e=>{if(e.target.id==='link-modal')e.target.classList.remove('show')});
 $('#link-url').addEventListener('focus',e=>e.target.select());
 $('#open-ov').href=overlayURL();
+
+/* ---------- 팝업 창으로 열기 (미리보기를 작은 독립 창으로) ---------- */
+let popWin=null;
+function openPopup(){
+  const w=440,h=520;
+  const left=Math.max(0,Math.round((screen.availLeft||0)+(screen.availWidth-w)/2));
+  const top=Math.max(0,Math.round((screen.availTop||0)+(screen.availHeight-h)/2));
+  if(popWin&&!popWin.closed){popWin.focus();return}
+  popWin=window.open(overlayURL(),'SDO_Overlay_Popup',`popup=yes,width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=no`);
+  if(!popWin){toast('팝업이 차단됐어요. 주소창의 팝업 허용을 눌러주세요');return}
+  popWin.focus();
+}
+$('#open-pop').onclick=openPopup;
 
 let resetArmed=false;
 $('#reset').onclick=e=>{
@@ -595,6 +621,17 @@ $('#fb-off').onclick=()=>{store.set(K.off,'1');location.reload()};
 
 /* ---------- boot ---------- */
 if(OVERLAY)document.body.classList.add('overlay');
+/* ---------- 사이트 다크 모드 (OBS 오버레이 화면에는 적용 안 됨) ---------- */
+function applyTheme(t){
+  if(OVERLAY)return;
+  document.documentElement.dataset.theme=t;
+  $('#theme-btn').textContent=t==='dark'?'☀️ 라이트':'🌙 다크';
+}
+$('#theme-btn').onclick=()=>{
+  const t=document.documentElement.dataset.theme==='dark'?'light':'dark';
+  store.set('sdo_theme',t);applyTheme(t);
+};
+applyTheme(store.get('sdo_theme')==='dark'?'dark':'light');
 load();refreshAll();setMode(mode);initFirebase();
 </script>
 </body>
